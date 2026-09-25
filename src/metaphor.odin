@@ -7,6 +7,7 @@ game_state : Game_State
 
 DRINK_COFFEE_COMMAND :: "DRINK_COFFEE_COMMAND"
 FILL_CUP_COMMAND :: "FILL_CUP_COMMAND"
+MAKE_POT_COMMAND :: "MAKE_POT_COMMAND"
 
 @(export)
 step :: proc(dt: f32) -> bool {
@@ -14,10 +15,11 @@ step :: proc(dt: f32) -> bool {
         buf: [256]byte
         name := read_input(buf[:])
         if name == DRINK_COFFEE_COMMAND {
-            game_state.coffees_drank += 1
-            game_state.cup_full = false
+            game_state_drink_coffee(&game_state)
         } else if name == FILL_CUP_COMMAND {
-            game_state.cup_full = true
+            game_state_fill_cup(&game_state)
+        } else if name == MAKE_POT_COMMAND {
+            game_state_make_pot(&game_state)
         }
         update()
     }
@@ -45,14 +47,18 @@ update :: proc() {
     js_clear()
     js_write(fmt.tprintf("Coffees Drank: %d\n", game_state.coffees_drank))
     js_write("Cup: ")
+    js_write("Full\n" if game_state.cup_full else "Empty\n")
     if game_state.cup_full {
-        js_write("Full\n")
         js_add_button("Drink Coffee!", DRINK_COFFEE_COMMAND)
     } else {
-        js_write("Empty\n")
-        js_add_button("Fill Cup!", FILL_CUP_COMMAND)
+        if game_state.coffee_pot > 0 {
+            js_add_button("Fill Cup!", FILL_CUP_COMMAND)
+        }
     }
-    
+    js_write(fmt.tprintf("Coffee Pot: %d", game_state.coffee_pot))
+    if game_state.coffee_pot <= 0 {
+        js_add_button("Make Pot of Coffee!!", MAKE_POT_COMMAND)
+    }
 }
 
 main :: proc() {
