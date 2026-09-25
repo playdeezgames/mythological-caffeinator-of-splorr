@@ -9,17 +9,21 @@ DRINK_COFFEE_COMMAND :: "DRINK_COFFEE_COMMAND"
 FILL_CUP_COMMAND :: "FILL_CUP_COMMAND"
 MAKE_POT_COMMAND :: "MAKE_POT_COMMAND"
 
+Command :: struct {
+    handler : proc(^Game_State),
+    condition : proc(^Game_State) -> bool,
+    title: string
+}
+
+commands : map[string]Command
+
 @(export)
 step :: proc(dt: f32) -> bool {
     if js_can_read() {
         buf: [256]byte
         name := read_input(buf[:])
-        if name == DRINK_COFFEE_COMMAND {
-            game_state_drink_coffee(&game_state)
-        } else if name == FILL_CUP_COMMAND {
-            game_state_fill_cup(&game_state)
-        } else if name == MAKE_POT_COMMAND {
-            game_state_make_pot(&game_state)
+        if command, ok:= commands[name]; ok {
+            command.handler(&game_state)
         }
         update()
     }
@@ -45,23 +49,36 @@ foreign my_env {
 
 update :: proc() {
     js_clear()
+
     js_write(fmt.tprintf("Coffees Drank: %d\n", game_state.coffees_drank))
     js_write("Cup: ")
     js_write("Full\n" if game_state.cup_full else "Empty\n")
-    if game_state.cup_full {
-        js_add_button("Drink Coffee!", DRINK_COFFEE_COMMAND)
-    } else {
-        if game_state.coffee_pot > 0 {
-            js_add_button("Fill Cup!", FILL_CUP_COMMAND)
-        }
-    }
+    js_write(fmt.tprintf("Cup Filth: %d/%d\n", game_state.cup_filth, game_state.cup_filth_maximum))
     js_write(fmt.tprintf("Coffee Pot: %d", game_state.coffee_pot))
-    if game_state.coffee_pot <= 0 {
-        js_add_button("Make Pot of Coffee!!", MAKE_POT_COMMAND)
+    for command_text, command in commands {
+        if command.condition(&game_state) {
+            js_add_button(command.title, command_text)
+        }
     }
 }
 
 main :: proc() {
+    commands = make(map[string]Command)
+    commands[DRINK_COFFEE_COMMAND]=Command {
+        handler = game_state_drink_coffee,
+        condition = game_state_can_drink_coffee,
+        title = "Drink Coffee!"
+    }
+    commands[FILL_CUP_COMMAND]=Command {
+        handler = game_state_fill_cup,
+        condition = game_state_can_fill_cup,
+        title = "Fill Cup!"
+    }
+    commands[MAKE_POT_COMMAND]=Command {
+        handler = game_state_make_pot,
+        condition = game_state_can_make_pot,
+        title = "Make Pot!"
+    }
     game_state_init(&game_state)
     update()
 }
