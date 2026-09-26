@@ -27,16 +27,16 @@ COMMANDS : []Command : {
         command = MAKE_POT_COMMAND
     },
     Command {
-        handler = game_state_level_up,
-        condition = game_state_can_level_up,
-        title = "Level Up!",
-        command = LEVEL_UP_COMMAND
-    },
-    Command {
         handler = game_state_wash_cup,
         condition = game_state_can_wash_cup,
         title = "Wash Cup!",
         command = WASH_CUP_COMMAND
+    },
+    Command {
+        handler = game_state_level_up,
+        condition = game_state_can_level_up,
+        title = "Level Up!",
+        command = LEVEL_UP_COMMAND
     }
 }
 
