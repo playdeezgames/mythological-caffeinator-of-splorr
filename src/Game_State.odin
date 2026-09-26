@@ -14,6 +14,8 @@ Game_State :: struct {
     xp_level: int
 }
 
+game_state : Game_State
+
 game_state_init :: proc(game_state: ^Game_State) {
     game_state.coffees_drank = 0
     game_state.cup_full = false
@@ -27,7 +29,7 @@ game_state_init :: proc(game_state: ^Game_State) {
 }
 
 game_state_can_drink_coffee :: proc(game_state: ^Game_State) -> bool {
-    return game_state.cup_full
+    return game_state.cup_full && game_state.cup_filth < game_state.cup_filth_maximum
 }
 
 game_state_drink_coffee :: proc(game_state: ^Game_State) {
@@ -68,5 +70,15 @@ game_state_level_up :: proc(game_state: ^Game_State) {
     if game_state_can_level_up(game_state) {
         game_state.xp = 0
         game_state.xp_level += 1
+    }
+}
+
+game_state_can_wash_cup :: proc(game_state: ^Game_State) -> bool {
+    return game_state.cup_filth > 0
+}
+
+game_state_wash_cup :: proc(game_state: ^Game_State) {
+    if game_state_can_wash_cup(game_state) {
+        game_state.cup_filth = 0
     }
 }
