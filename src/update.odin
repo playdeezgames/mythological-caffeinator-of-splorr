@@ -12,9 +12,9 @@ update :: proc() {
     js_write(fmt.tprintf("Coffee Pot: %d\n", game_state.coffee_pot))
     js_write(fmt.tprintf("XP: %d/%d\n", game_state.xp, game_state.xp_goal))
     js_write(fmt.tprintf("XP Level: %d\n", game_state.xp_level))
-    for command_text, command in commands {
+    for command in COMMANDS {
         if command.condition(&game_state) {
-            js_add_button(command.title, command_text)
+            js_add_button(command.title, command.command)
         }
     }
 }

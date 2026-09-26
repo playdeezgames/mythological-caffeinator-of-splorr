@@ -18,7 +18,6 @@ read_input :: proc(buf: []byte) -> string {
 }
 
 main :: proc() {
-    command_init()
     game_state_init(&game_state)
     update()
 }
