@@ -8,7 +8,10 @@ Game_State :: struct {
     coffee_pot: int,
     coffee_pot_maximum : int,
     cup_filth: int,
-    cup_filth_maximum: int
+    cup_filth_maximum: int,
+    xp : int,
+    xp_goal: int,
+    xp_level: int
 }
 
 game_state_init :: proc(game_state: ^Game_State) {
@@ -18,6 +21,9 @@ game_state_init :: proc(game_state: ^Game_State) {
     game_state.coffee_pot_maximum = 12
     game_state.cup_filth = 0
     game_state.cup_filth_maximum = 10
+    game_state.xp = 0
+    game_state.xp_goal = 100
+    game_state.xp_level = 1
 }
 
 game_state_can_drink_coffee :: proc(game_state: ^Game_State) -> bool {
@@ -29,6 +35,7 @@ game_state_drink_coffee :: proc(game_state: ^Game_State) {
         game_state.coffees_drank += 1
         game_state.cup_full = false
         game_state.cup_filth = min(game_state.cup_filth+1, game_state.cup_filth_maximum)
+        game_state.xp = math.clamp(game_state.xp + 1, 0, game_state.xp_goal)
     }
 }
 
@@ -50,5 +57,16 @@ game_state_can_make_pot :: proc(game_state: ^Game_State) -> bool {
 game_state_make_pot :: proc(game_state: ^Game_State) {
     if game_state_can_make_pot(game_state) {
         game_state.coffee_pot = game_state.coffee_pot_maximum
+    }
+}
+
+game_state_can_level_up :: proc(game_state: ^Game_State) -> bool {
+    return game_state.xp >= game_state.xp_goal
+}
+
+game_state_level_up :: proc(game_state: ^Game_State) {
+    if game_state_can_level_up(game_state) {
+        game_state.xp = 0
+        game_state.xp_level += 1
     }
 }

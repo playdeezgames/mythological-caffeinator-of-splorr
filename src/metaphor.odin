@@ -8,6 +8,7 @@ game_state : Game_State
 DRINK_COFFEE_COMMAND :: "DRINK_COFFEE_COMMAND"
 FILL_CUP_COMMAND :: "FILL_CUP_COMMAND"
 MAKE_POT_COMMAND :: "MAKE_POT_COMMAND"
+LEVEL_UP_COMMAND :: "LEVEL_UP_COMMAND"
 
 Command :: struct {
     handler : proc(^Game_State),
@@ -54,7 +55,9 @@ update :: proc() {
     js_write("Cup: ")
     js_write("Full\n" if game_state.cup_full else "Empty\n")
     js_write(fmt.tprintf("Cup Filth: %d/%d\n", game_state.cup_filth, game_state.cup_filth_maximum))
-    js_write(fmt.tprintf("Coffee Pot: %d", game_state.coffee_pot))
+    js_write(fmt.tprintf("Coffee Pot: %d\n", game_state.coffee_pot))
+    js_write(fmt.tprintf("XP: %d/%d\n", game_state.xp, game_state.xp_goal))
+    js_write(fmt.tprintf("XP Level: %d\n", game_state.xp_level))
     for command_text, command in commands {
         if command.condition(&game_state) {
             js_add_button(command.title, command_text)
@@ -78,6 +81,11 @@ main :: proc() {
         handler = game_state_make_pot,
         condition = game_state_can_make_pot,
         title = "Make Pot!"
+    }
+    commands[LEVEL_UP_COMMAND]=Command {
+        handler = game_state_level_up,
+        condition = game_state_can_level_up,
+        title = "Level Up!"
     }
     game_state_init(&game_state)
     update()
