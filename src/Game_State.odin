@@ -14,7 +14,9 @@ Game_State :: struct {
     xp_level: int,
     cup_wash_count: int,
     bladder: int,
-    bladder_maximum: int
+    bladder_maximum: int,
+    health: int,
+    health_maximum: int
 }
 
 game_state : Game_State
@@ -32,6 +34,12 @@ game_state_init :: proc(game_state: ^Game_State) {
     game_state.cup_wash_count = 0
     game_state.bladder = 0
     game_state.bladder_maximum = 100
+    game_state.health = 100
+    game_state.health_maximum = 100
+}
+
+game_state_is_alive :: proc(game_state: ^Game_State) -> bool {
+    return game_state.health > 0
 }
 
 game_state_add_xp :: proc(game_state: ^Game_State, amount: int) {
@@ -39,7 +47,21 @@ game_state_add_xp :: proc(game_state: ^Game_State, amount: int) {
 }
 
 game_state_can_drink_coffee :: proc(game_state: ^Game_State) -> bool {
-    return game_state.cup_full && game_state.cup_filth < game_state.cup_filth_maximum
+    return game_state.cup_full && game_state.cup_filth < game_state.cup_filth_maximum && game_state_is_alive(game_state)
+}
+
+game_state_change_health :: proc(game_state: ^Game_State, amount: int) {
+    game_state.health = math.clamp(game_state.health+amount, 0, game_state.health_maximum)
+}
+
+game_state_increase_bladder :: proc(game_state: ^Game_State, amount: int) {
+    if amount > 0 {
+        capacity:= game_state.bladder_maximum - game_state.bladder
+        if amount > capacity {
+            game_state_change_health(game_state, capacity - amount)
+        }
+    }
+    game_state.bladder = math.clamp(game_state.bladder+amount, 0, game_state.bladder_maximum)
 }
 
 game_state_drink_coffee :: proc(game_state: ^Game_State) {
@@ -48,12 +70,12 @@ game_state_drink_coffee :: proc(game_state: ^Game_State) {
         game_state.cup_full = false
         game_state.cup_filth = min(game_state.cup_filth+1, game_state.cup_filth_maximum)
         game_state_add_xp(game_state, 1)
-        game_state.bladder = math.clamp(game_state.bladder+1, 0, game_state.bladder_maximum)
+        game_state_increase_bladder(game_state, 1)
     }
 }
 
 game_state_can_fill_cup :: proc(game_state: ^Game_State) -> bool {
-    return !game_state.cup_full && game_state.coffee_pot > 0 
+    return !game_state.cup_full && game_state.coffee_pot > 0 && game_state_is_alive(game_state)
 }
 
 game_state_fill_cup :: proc(game_state: ^Game_State) {
@@ -65,7 +87,7 @@ game_state_fill_cup :: proc(game_state: ^Game_State) {
 }
 
 game_state_can_make_pot :: proc(game_state: ^Game_State) -> bool {
-    return game_state.coffee_pot <= 0
+    return game_state.coffee_pot <= 0 && game_state_is_alive(game_state)
 }
 
 game_state_make_pot :: proc(game_state: ^Game_State) {
@@ -76,24 +98,36 @@ game_state_make_pot :: proc(game_state: ^Game_State) {
 }
 
 game_state_can_level_up :: proc(game_state: ^Game_State) -> bool {
-    return game_state.xp >= game_state.xp_goal
+    return game_state.xp >= game_state.xp_goal && game_state_is_alive(game_state)
 }
 
 game_state_level_up :: proc(game_state: ^Game_State) {
     if game_state_can_level_up(game_state) {
         game_state.xp = 0
         game_state.xp_level += 1
+        game_state.xp_goal *= 2
     }
 }
 
 game_state_can_wash_cup :: proc(game_state: ^Game_State) -> bool {
-    return game_state.cup_filth > 0
+    return game_state.cup_filth > 0 && game_state_is_alive(game_state)
 }
 
 game_state_wash_cup :: proc(game_state: ^Game_State) {
     if game_state_can_wash_cup(game_state) {
         game_state.cup_filth = 0
         game_state.cup_wash_count += 1
+        game_state_add_xp(game_state, 1)
+    }
+}
+
+game_state_can_use_loo :: proc(game_state: ^Game_State) -> bool {
+    return game_state.bladder >= game_state.bladder_maximum / 2 && game_state_is_alive(game_state)
+}
+
+game_state_use_loo :: proc(game_state: ^Game_State) {
+    if game_state_can_use_loo(game_state) {
+        game_state.bladder = 0
         game_state_add_xp(game_state, 1)
     }
 }

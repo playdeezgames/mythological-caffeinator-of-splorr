@@ -33,6 +33,12 @@ COMMANDS : []Command : {
         command = WASH_CUP_COMMAND
     },
     Command {
+        handler = game_state_use_loo,
+        condition = game_state_can_use_loo,
+        title = "Use Loo!",
+        command = USE_LOO_COMMAND
+    },
+    Command {
         handler = game_state_level_up,
         condition = game_state_can_level_up,
         title = "Level Up!",
@@ -45,6 +51,7 @@ FILL_CUP_COMMAND :: "FILL_CUP_COMMAND"
 MAKE_POT_COMMAND :: "MAKE_POT_COMMAND"
 LEVEL_UP_COMMAND :: "LEVEL_UP_COMMAND"
 WASH_CUP_COMMAND :: "WASH_CUP_COMMAND"
+USE_LOO_COMMAND :: "USE_LOO_COMMAND"
 
 command_dispatch :: proc(name: string) {
     for command in COMMANDS {
